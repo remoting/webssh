@@ -1,0 +1,110 @@
+<!doctype html>
+<html>
+    <head>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+        <meta charset="utf-8"/>
+        <link rel="stylesheet" type="text/css" href="./xterm.css">
+        <style type="text/css">
+        html,body {
+            margin: 0px;
+            padding: 0px; 
+            height: 100%;
+        }
+        .terminal-body ,.terminal-content {
+            height: 100%;
+        }
+        </style>
+        <script src="./jquery.js"></script>
+        <script src="./socket.io/socket.io.js"></script>
+        <script src="./xterm.js"></script>
+        <script src="./addons/fit/fit.js"></script>
+    </head>
+    <body>
+        <div class="terminal-body"></div>
+        <script>
+        var i = 0;
+        var xbody = $(".terminal-body");
+        var openTerminal = function(name) {
+            if (!name) {
+                name = "terminal-"+i;
+                i = i + 1;
+            }
+
+            var term = new Terminal();
+          
+            var termContent = $("<div>", {
+                'id': name,
+                'class': "terminal-content"
+            });
+ 
+            termContent.appendTo(xbody);
+
+            
+            term.open(termContent[0]);
+
+            var socket = io.connect([window.location.protocol, '//', window.location.host].join(''), {
+                'force new connection': true,
+                path: '/exec/socket.io'
+            });
+
+
+            socket.on('connect',function() {
+                var initialGeometry = term.proposeGeometry(),
+                cols = initialGeometry.cols,
+                rows = initialGeometry.rows;
+                socket.emit("resize", {
+                    'w': cols,
+                    'h': rows
+                });
+            });
+            socket.on('output', function (data) {
+                term.write(data);
+            });
+
+            term.on("data", function (c) {
+                socket.emit('input', c);
+            });
+
+            term.on("resize", function (size) {
+                socket.emit("resize", {
+                    'w': size.cols,
+                    'h': size.rows
+                });
+            }); 
+
+            $(window).resize(function () {
+                term.fit();
+            });
+
+            //////
+            var _termId = getQueryString('token'); // window.location.search.substr(1);
+            socket.emit('createTerminal', _termId, function (term_id) {
+                if(term_id=='error'){
+                    return alert("当前会话token错误！");
+                }
+                if(term_id=='timeout'){
+                    return alert("当前会话token超时！");
+                }
+                term.termId = term_id;
+                term.sizeToFit();
+                term.focus();
+            });
+        };
+
+        // Open a terminal
+        $(document).ready(function() {
+            openTerminal();
+        });
+ 
+         
+
+        function getQueryString(name) { 
+            var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i"); 
+            var r = window.location.search.substr(1).match(reg); 
+            if (r != null) 
+                return unescape(r[2]); 
+            return null; 
+        }
+        </script>
+    </body>
+</html>

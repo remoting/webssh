@@ -1,0 +1,21 @@
+{
+  "name": "websshd",
+  "version": "1.0.0",
+  "description": "websshd",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "body-parser": "^1.15.2",
+    "cookie-parser": "^1.4.3",
+    "cookie-session": "^2.0.0-alpha.1",
+    "express": "^4.14.0",
+    "pty.js": "^0.3.1",
+    "querystring": "^0.2.0",
+    "sh.js": "^1.1.1",
+    "socket.io": "^1.4.8"
+  }
+}
